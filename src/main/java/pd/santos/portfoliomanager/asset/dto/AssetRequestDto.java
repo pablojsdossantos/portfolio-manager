@@ -1,11 +1,13 @@
 package pd.santos.portfoliomanager.asset.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pd.santos.portfoliomanager.asset.model.AssetCategory;
 
 @Data
 @Builder
@@ -25,7 +27,6 @@ public class AssetRequestDto {
     @Size(max = 10, message = "Country must be less than 10 characters")
     private String country;
 
-    @NotBlank(message = "Category is required")
-    @Size(max = 64, message = "Category must be less than 64 characters")
-    private String category;
+    @NotNull(message = "Category is required")
+    private AssetCategory category;
 }

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pd.santos.portfoliomanager.asset.model.AssetCategory;
 
 @Data
 @Builder
@@ -26,7 +27,6 @@ public class AssetUpdateRequestDto {
     @Size(max = 10, message = "Country must be less than 10 characters")
     private String country;
 
-    @NotBlank(message = "Category is required")
-    @Size(max = 64, message = "Category must be less than 64 characters")
-    private String category;
+    @NotNull(message = "Category is required")
+    private AssetCategory category;
 }

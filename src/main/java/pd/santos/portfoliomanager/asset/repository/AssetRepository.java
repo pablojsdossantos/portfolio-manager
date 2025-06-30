@@ -43,7 +43,4 @@ public interface AssetRepository extends CrudRepository<Asset, Long> {
                               @Param("country") String country, @Param("category") String category,
                               @Param("active") Boolean active);
 
-    @Query("SELECT id, ticker, name, country, category, active FROM \"portfolio-manager\".asset " +
-           "WHERE id = :id")
-    Asset findAssetById(@Param("id") Long id);
 }

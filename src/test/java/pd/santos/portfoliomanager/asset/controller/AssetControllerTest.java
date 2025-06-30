@@ -14,6 +14,7 @@ import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 import pd.santos.portfoliomanager.asset.dto.AssetRequestDto;
 import pd.santos.portfoliomanager.asset.dto.AssetUpdateRequestDto;
 import pd.santos.portfoliomanager.asset.model.Asset;
+import pd.santos.portfoliomanager.asset.model.AssetCategory;
 import pd.santos.portfoliomanager.asset.service.AssetService;
 
 import java.util.Arrays;
@@ -54,7 +55,7 @@ public class AssetControllerTest {
                 .ticker("AAPL")
                 .name("Apple Inc.")
                 .country("USA")
-                .category("Technology")
+                .category(AssetCategory.STOCK)
                 .build();
 
         Asset savedAsset = Asset.builder()
@@ -62,7 +63,7 @@ public class AssetControllerTest {
                 .ticker("AAPL")
                 .name("Apple Inc.")
                 .country("USA")
-                .category("Technology")
+                .category(AssetCategory.STOCK)
                 .active(true)
                 .build();
 
@@ -77,7 +78,7 @@ public class AssetControllerTest {
                 .andExpect(jsonPath("$.ticker").value("AAPL"))
                 .andExpect(jsonPath("$.name").value("Apple Inc."))
                 .andExpect(jsonPath("$.country").value("USA"))
-                .andExpect(jsonPath("$.category").value("Technology"))
+                .andExpect(jsonPath("$.category").value("STOCK"))
                 .andExpect(jsonPath("$.active").value(true));
     }
 
@@ -85,11 +86,10 @@ public class AssetControllerTest {
     public void testUpdateAsset_Success() throws Exception {
         Long assetId = 1L;
         AssetUpdateRequestDto assetUpdateRequestDto = AssetUpdateRequestDto.builder()
-                .id(assetId)
                 .ticker("AAPL")
                 .name("Apple Inc. Updated")
                 .country("USA")
-                .category("Technology")
+                .category(AssetCategory.STOCK)
                 .build();
 
         Asset updatedAsset = Asset.builder()
@@ -97,7 +97,7 @@ public class AssetControllerTest {
                 .ticker("AAPL")
                 .name("Apple Inc. Updated")
                 .country("USA")
-                .category("Technology")
+                .category(AssetCategory.STOCK)
                 .active(true)
                 .build();
 
@@ -112,28 +112,8 @@ public class AssetControllerTest {
                 .andExpect(jsonPath("$.ticker").value("AAPL"))
                 .andExpect(jsonPath("$.name").value("Apple Inc. Updated"))
                 .andExpect(jsonPath("$.country").value("USA"))
-                .andExpect(jsonPath("$.category").value("Technology"))
+                .andExpect(jsonPath("$.category").value("STOCK"))
                 .andExpect(jsonPath("$.active").value(true));
-    }
-
-    @Test
-    public void testUpdateAsset_IdMismatch() throws Exception {
-        Long pathAssetId = 1L;
-        Long bodyAssetId = 2L;  // Different from pathAssetId
-
-        AssetUpdateRequestDto assetUpdateRequestDto = AssetUpdateRequestDto.builder()
-                .id(bodyAssetId)
-                .ticker("AAPL")
-                .name("Apple Inc.")
-                .country("USA")
-                .category("Technology")
-                .build();
-
-        mockMvc.perform(put("/assets/" + pathAssetId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(assetUpdateRequestDto)))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -144,7 +124,7 @@ public class AssetControllerTest {
                         .ticker("AAPL")
                         .name("Apple Inc.")
                         .country("USA")
-                        .category("Technology")
+                        .category(AssetCategory.STOCK)
                         .active(true)
                         .build(),
                 Asset.builder()
@@ -152,7 +132,7 @@ public class AssetControllerTest {
                         .ticker("MSFT")
                         .name("Microsoft Corporation")
                         .country("USA")
-                        .category("Technology")
+                        .category(AssetCategory.STOCK)
                         .active(true)
                         .build()
         );
@@ -166,13 +146,13 @@ public class AssetControllerTest {
                 .andExpect(jsonPath("$[0].ticker").value("AAPL"))
                 .andExpect(jsonPath("$[0].name").value("Apple Inc."))
                 .andExpect(jsonPath("$[0].country").value("USA"))
-                .andExpect(jsonPath("$[0].category").value("Technology"))
+                .andExpect(jsonPath("$[0].category").value("STOCK"))
                 .andExpect(jsonPath("$[0].active").value(true))
                 .andExpect(jsonPath("$[1].id").value(2))
                 .andExpect(jsonPath("$[1].ticker").value("MSFT"))
                 .andExpect(jsonPath("$[1].name").value("Microsoft Corporation"))
                 .andExpect(jsonPath("$[1].country").value("USA"))
-                .andExpect(jsonPath("$[1].category").value("Technology"))
+                .andExpect(jsonPath("$[1].category").value("STOCK"))
                 .andExpect(jsonPath("$[1].active").value(true));
     }
 
@@ -184,7 +164,7 @@ public class AssetControllerTest {
                         .ticker("AAPL")
                         .name("Apple Inc.")
                         .country("USA")
-                        .category("Technology")
+                        .category(AssetCategory.STOCK)
                         .active(true)
                         .build()
         );
@@ -199,7 +179,7 @@ public class AssetControllerTest {
                 .andExpect(jsonPath("$[0].ticker").value("AAPL"))
                 .andExpect(jsonPath("$[0].name").value("Apple Inc."))
                 .andExpect(jsonPath("$[0].country").value("USA"))
-                .andExpect(jsonPath("$[0].category").value("Technology"))
+                .andExpect(jsonPath("$[0].category").value("STOCK"))
                 .andExpect(jsonPath("$[0].active").value(true));
     }
 
@@ -211,7 +191,7 @@ public class AssetControllerTest {
                 .ticker("AAPL")
                 .name("Apple Inc.")
                 .country("USA")
-                .category("Technology")
+                .category(AssetCategory.STOCK)
                 .active(false)  // Set to false after soft delete
                 .build();
 
@@ -224,7 +204,7 @@ public class AssetControllerTest {
                 .andExpect(jsonPath("$.ticker").value("AAPL"))
                 .andExpect(jsonPath("$.name").value("Apple Inc."))
                 .andExpect(jsonPath("$.country").value("USA"))
-                .andExpect(jsonPath("$.category").value("Technology"))
+                .andExpect(jsonPath("$.category").value("STOCK"))
                 .andExpect(jsonPath("$.active").value(false));  // Verify active is false
     }
 }

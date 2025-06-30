@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import pd.santos.portfoliomanager.asset.dto.AssetRequestDto;
 import pd.santos.portfoliomanager.asset.dto.AssetUpdateRequestDto;
 import pd.santos.portfoliomanager.asset.model.Asset;
+import pd.santos.portfoliomanager.asset.model.AssetCategory;
 import pd.santos.portfoliomanager.asset.service.AssetService;
 
 import java.util.List;
@@ -51,9 +52,10 @@ public class AssetController {
             @RequestParam(required = false) String ticker,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String country,
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String categoryStr,
             @RequestParam(required = false) Boolean active) {
 
+        AssetCategory category = categoryStr != null ? AssetCategory.fromString(categoryStr) : null;
         List<Asset> assets = assetService.findAssets(ticker, name, country, category, active);
         return new ResponseEntity<>(assets, HttpStatus.OK);
     }
