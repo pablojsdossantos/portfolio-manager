@@ -8,6 +8,7 @@ import pd.santos.portfoliomanager.asset.dto.AssetEventDto;
 import pd.santos.portfoliomanager.asset.model.Asset;
 import pd.santos.portfoliomanager.asset.model.AssetCategory;
 import pd.santos.portfoliomanager.asset.model.AssetEvent;
+import pd.santos.portfoliomanager.asset.model.AssetEventType;
 import pd.santos.portfoliomanager.asset.model.AssetHistory;
 import pd.santos.portfoliomanager.asset.repository.AssetEventRepository;
 import pd.santos.portfoliomanager.asset.repository.AssetHistoryRepository;
@@ -18,12 +19,20 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AssetService {
+
+    // Static constants for variation periods
+    private static final int VARIATION_1D = 1;
+    private static final int VARIATION_30D = 30;
+    private static final int VARIATION_60D = 60;
+    private static final int VARIATION_180D = 180;
+    private static final int VARIATION_360D = 360;
 
     private final AssetRepository assetRepository;
     private final AssetEventRepository assetEventRepository;
@@ -118,11 +127,11 @@ public class AssetService {
                 .date(eventDto.getDate());
 
         switch (eventDto.getEventType()) {
-            case "PRICE_UPDATE":
+            case PRICE_UPDATE:
                 return handlePriceUpdate(builder, assetId, eventDto);
-            case "SPLIT":
+            case SPLIT:
                 return handleSplit(builder, assetId, eventDto);
-            case "AGGREGATE":
+            case AGGREGATE:
                 return handleAggregate(builder, assetId, eventDto);
             default:
                 log.warn("Unknown event type: {}", eventDto.getEventType());
@@ -139,16 +148,60 @@ public class AssetService {
      * @return the AssetHistory object
      */
     private AssetHistory handlePriceUpdate(AssetHistory.AssetHistoryBuilder builder, Long assetId, AssetEventDto eventDto) {
-        builder.price(eventDto.getAmount());
+        BigDecimal price = eventDto.getAmount();
+        builder.price(price);
 
-        // Calculate variations
-        calculateVariation(builder, assetId, eventDto.getDate(), 1);
-        calculateVariation(builder, assetId, eventDto.getDate(), 30);
-        calculateVariation(builder, assetId, eventDto.getDate(), 60);
-        calculateVariation(builder, assetId, eventDto.getDate(), 180);
-        calculateVariation(builder, assetId, eventDto.getDate(), 360);
+        // Calculate all variations at once using a single database query
+        calculateVariations(builder, assetId, eventDto.getDate(), price);
 
         return builder.build();
+    }
+
+    /**
+     * Calculate all variations at once using a single database query.
+     * 
+     * @param builder the AssetHistory builder
+     * @param assetId the asset ID
+     * @param currentDate the current date
+     * @param currentPrice the current price
+     */
+    private void calculateVariations(AssetHistory.AssetHistoryBuilder builder, Long assetId, LocalDate currentDate, BigDecimal currentPrice) {
+        // Define the days to look back for each variation period
+        Integer[] variationDays = {VARIATION_1D, VARIATION_30D, VARIATION_60D, VARIATION_180D, VARIATION_360D};
+
+        // Fetch all historical prices in a single query
+        Map<LocalDate, BigDecimal> historicalPrices = assetHistoryRepository.findHistoricalPricesForDates(
+                assetId, currentDate, variationDays);
+
+        // Calculate each variation if the historical price exists
+        for (int days : variationDays) {
+            LocalDate historicalDate = currentDate.minusDays(days);
+            BigDecimal historicalPrice = historicalPrices.get(historicalDate);
+
+            if (historicalPrice != null && !historicalPrice.equals(BigDecimal.ZERO)) {
+                BigDecimal variation = currentPrice.subtract(historicalPrice)
+                        .divide(historicalPrice, 10, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
+
+                switch (days) {
+                    case VARIATION_1D:
+                        builder.variation1d(variation);
+                        break;
+                    case VARIATION_30D:
+                        builder.variation30d(variation);
+                        break;
+                    case VARIATION_60D:
+                        builder.variation60d(variation);
+                        break;
+                    case VARIATION_180D:
+                        builder.variation180d(variation);
+                        break;
+                    case VARIATION_360D:
+                        builder.variation360d(variation);
+                        break;
+                }
+            }
+        }
     }
 
     /**
@@ -203,41 +256,4 @@ public class AssetService {
         return builder.build();
     }
 
-    /**
-     * Calculate the variation between the current price and the price from a specified number of days ago.
-     * 
-     * @param builder the AssetHistory builder
-     * @param assetId the asset ID
-     * @param currentDate the current date
-     * @param days the number of days to look back
-     */
-    private void calculateVariation(AssetHistory.AssetHistoryBuilder builder, Long assetId, LocalDate currentDate, int days) {
-        Optional<AssetHistory> previousHistory = assetHistoryRepository.findHistoryByAssetIdAndDateMinus(assetId, currentDate, days);
-
-        if (previousHistory.isPresent() && previousHistory.get().getPrice() != null && !previousHistory.get().getPrice().equals(BigDecimal.ZERO)) {
-            BigDecimal currentPrice = builder.build().getPrice();
-            BigDecimal previousPrice = previousHistory.get().getPrice();
-            BigDecimal variation = currentPrice.subtract(previousPrice)
-                    .divide(previousPrice, 4, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-
-            switch (days) {
-                case 1:
-                    builder.variation1d(variation);
-                    break;
-                case 30:
-                    builder.variation30d(variation);
-                    break;
-                case 60:
-                    builder.variation60d(variation);
-                    break;
-                case 180:
-                    builder.variation180d(variation);
-                    break;
-                case 360:
-                    builder.variation360d(variation);
-                    break;
-            }
-        }
-    }
 }

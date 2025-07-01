@@ -30,7 +30,7 @@ public class AssetEvent {
     private Long assetId;
 
     @Column("event_type")
-    private String eventType;
+    private AssetEventType eventType;
 
     private BigDecimal amount;
 

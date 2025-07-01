@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pd.santos.portfoliomanager.asset.model.AssetEventType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,7 +20,7 @@ import java.util.UUID;
 public class AssetEventDto {
     private UUID eventId;
     private String ticker;
-    private String eventType;
+    private AssetEventType eventType;
     private BigDecimal amount;
     private LocalDate date;
 }
