@@ -17,6 +17,14 @@ public class UserController {
 
     private final UserService userService;
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleUserNotFoundException(RuntimeException ex) {
+        if (ex.getMessage().contains("User not found")) {
+            return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+        }
+        throw ex;
+    }
+
     @PostMapping
     public ResponseEntity<User> createUser(@Valid @RequestBody UserRequestDto userRequestDto) {
         User user = User.builder()
